@@ -101,24 +101,61 @@ public final class MainCanvas extends GameCanvas implements Runnable
         blit();
     }
 
-    /** One blit.  Prefers the J2ME profile extension when the handset has it. */
+    /**
+     * One blit.
+     *
+     * The mutable Image is created once: allocating a fresh one (or an int[]
+     * per pixel) every frame is what makes J2ME games stutter, because the
+     * collector has ~700 kB of heap to work with on an SE handset.
+     */
     private void blit()
     {
         Graphics g = getGraphics();
+        // Not every handset has drawRGB; probe once and pick fast or slow path.
+        if (!blitProbed)
+        {
+            blitProbed = true;
+            try
+            {
+                Graphics probe = Image.createImage(1, 1).getGraphics();
+                probe.drawRGB(new int[1], 0, 1, 0, 0, 1, 1, false);
+                hasDrawRgb = true;
+            }
+            catch (Throwable e) { hasDrawRgb = false; }
+        }
         try
         {
-            Image img = Image.createRGBImage(rgb(), high.w, high.h, false);
-            g.drawImage(img, 0, 0, Graphics.TOP | Graphics.LEFT);
+            if (hasDrawRgb)
+            {
+                if (frameImg == null)
+                {
+                    frameImg = Image.createImage(high.w, high.h);
+                    frameG = frameImg.getGraphics();
+                }
+                frameG.drawRGB(rgb(), 0, high.w, 0, 0, high.w, high.h, false);
+                g.drawImage(frameImg, 0, 0, Graphics.TOP | Graphics.LEFT);
+            }
+            else
+            {
+                // MIDP 1.0 fallback: an ImmutableImage built straight from the
+                // buffer.  Slower, but correct on handsets without drawRGB.
+                Image img = Image.createRGBImage(rgb(), high.w, high.h, false);
+                g.drawImage(img, 0, 0, Graphics.TOP | Graphics.LEFT);
+            }
         }
         catch (Throwable e)
         {
-            // Last resort: the RGB565 buffer cannot be created, draw a dark
+            // Last resort: the RGB buffer cannot be created, draw a dark
             // screen so the app keeps responding instead of dying.
             g.setColor(0);
             g.fillRect(0, 0, high.w, high.h);
         }
         flushGraphics();
     }
+
+    private Image frameImg;
+    private Graphics frameG;
+    private boolean blitProbed, hasDrawRgb;
 
     private int[] rgbBuf;
 

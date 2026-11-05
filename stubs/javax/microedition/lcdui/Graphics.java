@@ -58,4 +58,7 @@ public class Graphics
     public void drawRegion(Image src, int sx, int sy, int w, int h, int t, int x, int y, int a) {}
     public void copyArea(int x, int y, int w, int h, int dx, int dy, int a) {}
     public void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {}
+    /** MIDP-1.0 on CLDC-1.1 gives us the raw-RGB blit; not in every profile. */
+    public void drawRGB(int[] rgb, int off, int scan, int x, int y, int w, int h,
+                        boolean alpha) {}
 }
