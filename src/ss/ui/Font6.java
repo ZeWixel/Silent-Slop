@@ -138,6 +138,65 @@ public final class Font6
     }
 
     /** Draws at 1x with a 1 px drop shadow, into an RGB565 framebuffer. */
+    /**
+     * Greedy word wrap.  Returns the number of rows the text needs, so the
+     * caller can size its box before drawing.
+     */
+    public static int wrapRows(String s, int maxPx)
+    {
+        int cols = maxPx / W;
+        if (cols < 1) cols = 1;
+        int rows = 1, col = 0;
+        int i = 0;
+        while (i < s.length())
+        {
+            int sp = s.indexOf(' ', i);
+            if (sp < 0) sp = s.length();
+            int w = sp - i;
+            if (col > 0 && col + 1 + w > cols)
+            {
+                rows++;
+                col = w;
+            }
+            else
+            {
+                col += (col > 0 ? 1 : 0) + w;
+            }
+            i = sp + 1;
+        }
+        return rows;
+    }
+
+    /**
+     * Draws wrapped text and returns the next row index.  `rows` is capped so a
+     * long line can never spill out of the dialogue box.
+     */
+    public static int drawWrapped(Fb fb, String s, int x, int y, int maxPx,
+                                  int color, int shadow, int maxRows)
+    {
+        if (s == null) return 0;
+        int cols = maxPx / W;
+        if (cols < 1) cols = 1;
+        int row = 0, col = 0, i = 0;
+        while (i < s.length() && row < maxRows)
+        {
+            int sp = s.indexOf(' ', i);
+            if (sp < 0) sp = s.length();
+            int w = sp - i;
+            if (col > 0 && col + 1 + w > cols)
+            {
+                row++;
+                col = 0;
+                if (row >= maxRows) break;
+            }
+            if (col > 0) col++;
+            draw(fb, s.substring(i, sp), x + col * W, y + row * 10, color, shadow);
+            col += w;
+            i = sp + 1;
+        }
+        return row + 1;
+    }
+
     public static void draw(Fb fb, String s, int x, int y, int color, int shadow)
     {
         if (s == null) return;

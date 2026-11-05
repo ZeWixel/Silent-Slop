@@ -17,6 +17,8 @@ import ss.ui.Font6;
  */
 public final class Novel
 {
+    /** Frame counter for the non-deterministic-free background animation. */
+    private int animTicks;
     public static final int INTRO = 1;
     public static final int CYBIL = 2;
     public static final int SCREAMER = 3;
@@ -115,6 +117,7 @@ public final class Novel
     // ------------------------------------------------------------------- draw
     public void draw(Fb fb)
     {
+        animTicks++;
         int sx = 0, sy = 0;
         if (shake > 0)
         {
@@ -151,9 +154,11 @@ public final class Novel
                 if (total <= 0) break;
                 int len = s.length();
                 if (len > total) len = total;
-                Font6.draw(fb, s.substring(0, len), 4, yy, 0xE71C, 0x0000);
+                // wrap to the box: a page of prose must never run off the edge
+                int used = Font6.drawWrapped(fb, s.substring(0, len), 4, yy,
+                                             fb.w - 8, 0xE71C, 0x0000, 3);
                 total -= s.length();
-                yy += 10;
+                yy += used * 10;
                 n++;
             }
         }
@@ -220,7 +225,7 @@ public final class Novel
         // fog bands
         for (int i = 0; i < 3; i++)
         {
-            int yy = horizon - 10 + i * 7 + (int) (Core.sin((int) (System.currentTimeMillis() / 40 + i * 300)) >> 9);
+            int yy = horizon - 10 + i * 7 + (Core.sin(animTicks * 6 + i * 300) >> 9);
             int a = 40 - i * 10;
             for (int y = yy - 4; y < yy + 4; y++) fb.hline(0, W - 1, y + sy, Core.mix565(0x4A55, 0x630C, a));
         }

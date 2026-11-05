@@ -257,7 +257,17 @@ public final class Game
         }
         if (state == S_INVENTORY)
         {
-            if (in.tapped(Input.SOFT_LEFT) || in.tapped(Input.A) || in.tapped(Input.SOFT_RIGHT))
+            // `*` drinks a health drink - the one inventory action that is not
+            // just "close the panel" (GBA/Play Novel muscle memory expects it).
+            if (in.tapped(Input.STAR) && player.healthDrinks > 0 && player.hp < player.maxHp)
+            {
+                player.healthDrinks--;
+                player.hp += 40;
+                if (player.hp > player.maxHp) player.hp = player.maxHp;
+                Sfx.play(Sfx.PICKUP, 70);
+            }
+            else if (in.tapped(Input.SOFT_LEFT) || in.tapped(Input.A)
+                     || in.tapped(Input.SOFT_RIGHT))
             {
                 Sfx.play(Sfx.MENU, 60);
                 state = S_PLAY;
