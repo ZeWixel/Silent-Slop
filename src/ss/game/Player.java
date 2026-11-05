@@ -147,6 +147,9 @@ public final class Player
         if (godMode || invuln > 0 || !alive) return;
         hp -= amount;
         hurtTimer = 18;
+        // Mercy frames: without these the screamer's dive can chain and kill
+        // Harry from full health in under a second on a slow handset.
+        invuln = 26;
         if (hp <= 0)
         {
             hp = 0;

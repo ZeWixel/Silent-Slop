@@ -433,12 +433,10 @@ public final class Game
             doAction();
         }
 
-        // ---- enemies
-        for (int i = 0; i < enemies.length; i++)
-        {
-            Enemy e = enemies[i];
-            if (e.active) e.update(this);
-        }
+        // ---- enemies.  Dead-but-still-dying enemies are inactive, so update
+        //      every enemy that is not fully gone: killing one has to play its
+        //      death animation instead of freezing it mid-pose.
+        for (int i = 0; i < enemies.length; i++) enemies[i].update(this);
 
         // ---- the radio: static gets louder as something approaches
         updateRadio();
@@ -652,15 +650,23 @@ public final class Game
         {
             Enemy e = enemies[i];
             if (e.active) continue;
-            if (id == 1)
+            // Spawn in front of Harry on the open floor: a fixed offset from the
+            // player regularly lands inside a wall or a booth.
+            int fx = Core.sin(camYaw);
+            int fz = Core.cos(camYaw);
+            int dist = id == 1 ? 420 : 340;
+            int sx = player.x + ((fx * dist) >> 12);
+            int sz = player.z + ((fz * dist) >> 12);
+            int[] p = tmpPos;
+            if (isBlocked(sx, sz, 26))
             {
-                e.spawn(Enemy.KIND_SCREAMER, player.x + 200, player.z + 320);
+                p[0] = sx; p[2] = sz;
+                resolve(p, 26);
+                sx = p[0];
+                sz = p[2];
             }
-            else
-            {
-                e.spawn(Enemy.KIND_SCREAMER, player.x - 160, player.z + 260);
-                screamIntroDone = true;
-            }
+            e.spawn(Enemy.KIND_SCREAMER, sx, sz);
+            if (id != 1) screamIntroDone = true;
             Music.play(Music.CHASE);
             Sfx.play(Sfx.SIREN, 40);
             return;

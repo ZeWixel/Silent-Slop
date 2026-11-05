@@ -44,6 +44,43 @@ public class Play {
     g.state = Game.S_PLAY;
     g.camYaw = 0; g.draw(fb); Preview.save(fb, "/tmp/shots/play_cafe.png");
     g.camYaw = 2048; g.draw(fb); Preview.save(fb, "/tmp/shots/play_cafe2.png");
+
+    // 5) pick up the knife, a health drink and the flashlight in the cafe
+    pickAt(Level.u(9), Level.u(158));
+    pickAt(Level.u(-11), Level.u(150));
+    pickAt(Level.u(10), Level.u(154));
+    System.out.println("inventory: knife=" + g.player.hasKnife + " drinks=" + g.player.healthDrinks
+        + " flashlight=" + g.player.hasFlashlight + " radio=" + g.player.hasRadio);
+    // 6) the screamer appears once the knife and the map are in hand
+    for (int i = 0; i < 200; i++) {
+      if (g.state == Game.S_MESSAGE) g.state = Game.S_PLAY;
+      g.update(new Input());
+    }
+    int alive = 0;
+    for (int i = 0; i < g.enemies.length; i++) if (g.enemies[i].active) alive++;
+    System.out.println("enemies after intro trigger: " + alive + " state=" + g.state
+        + " msg=" + g.messageText);
+    // 7) kill it with the knife (Harry is healed so the test is about combat)
+    g.state = Game.S_PLAY;
+    g.player.hp = 100; g.player.alive = true;
+    for (int i = 0; i < g.enemies.length; i++) {
+      Enemy e = g.enemies[i];
+      if (!e.active) continue;
+      g.player.x = e.x + 40; g.player.z = e.z;
+      g.player.angle = Core.atan2(-40, 0);
+      int hits = 0;
+      for (int f = 0; f < 500 && e.active; f++) {
+        if (g.state == Game.S_MESSAGE) { Input dis = new Input(); dis.pressed[Input.A] = true; g.update(dis); continue; }
+        if (g.state != Game.S_PLAY) break;
+        Input k = new Input(); k.pressed[Input.A] = true; k.down[Input.A] = true;
+        int before = e.hp; g.update(k);
+        if (e.hp < before) hits++;
+        g.player.x = e.x + 40; g.player.z = e.z;
+      }
+      System.out.println("killed enemy in " + hits + " hits, hp=" + e.hp
+          + " active=" + e.active + " playerHP=" + g.player.hp);
+    }
+    System.out.println("final: level=" + g.level.name + " state=" + g.state);
   }
   static void walkTo(int x, int z) {
     for (int i = 0; i < 900; i++) {
@@ -60,5 +97,12 @@ public class Play {
     }
     step(2);
   }
+  static void pickAt(int x, int z) {
+    g.player.x = x; g.player.z = z;
+    Input in = new Input(); in.pressed[Input.A] = true;
+    g.update(in);
+    g.state = Game.S_PLAY;
+  }
+
   static void step(int n) { for (int i = 0; i < n; i++) g.update(new Input()); }
 }
