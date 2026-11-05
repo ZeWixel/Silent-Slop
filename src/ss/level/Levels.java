@@ -40,9 +40,9 @@ public final class Levels
         lv.spawnZ = 0;
         lv.spawnAngle = 0;
         lv.zoneX0 = Level.u(-104);
-        lv.zoneZ0 = Level.u(-16);
-        lv.zoneX1 = Level.u(104);
-        lv.zoneZ1 = Level.u(18);
+        lv.zoneZ0 = Level.u(-58);      // down the dead-end alley
+        lv.zoneX1 = Level.u(120);      // up to the fence at the end
+        lv.zoneZ1 = Level.u(24);   // the cafe doorstep
         Band.resetTriggers();
 
         // ---- ground -------------------------------------------------------
@@ -143,8 +143,8 @@ public final class Levels
         lv.prop(Models.BLOOD, Level.u(-4), 0, Level.u(2), 0);
 
         // ---- items ---------------------------------------------------------
-        lv.item(Tex.CAN, Level.u(-10), 20, Level.u(-13), 3);
-        lv.item(Tex.CAN, Level.u(52), 20, Level.u(12), 3);
+        lv.item(Tex.CAN, Level.u(-10), 20, Level.u(-12.5), 3);
+        lv.item(Tex.CAN, Level.u(58), 20, Level.u(12.5), 3);
 
         prog.step("street triggers");
         lv.trigger(Level.u(10), Level.u(-8), Level.u(20), Level.u(8), 0, 1, 1);
@@ -152,7 +152,7 @@ public final class Levels
         lv.trigger(Level.u(-18), Level.u(10), Level.u(-10), Level.u(15), 2, 1, 0);
         lv.trigger(Level.u(-9), Level.u(13), Level.u(-2), Level.u(22), 0, 3, 4);
         lv.trigger(Level.u(-46), Level.u(-58), Level.u(-38), Level.u(-30), 0, 4, 5);
-        lv.trigger(Level.u(-26), Level.u(-6), Level.u(-20), Level.u(6), 3, 1, 0);
+        lv.trigger(Level.u(-34), Level.u(-8), Level.u(-26), Level.u(8), 3, 1, 0);
         lv.trigger(Level.u(24), Level.u(-11), Level.u(40), Level.u(11), 4, 1, 0);
         prog.step("street done");
         return lv;
@@ -165,7 +165,7 @@ public final class Levels
         lv.spawnZ = Level.u(152);
         lv.spawnAngle = 1024;
         lv.zoneX0 = Level.u(-14);
-        lv.zoneZ0 = Level.u(141);
+        lv.zoneZ0 = Level.u(139);
         lv.zoneX1 = Level.u(14);
         lv.zoneZ1 = Level.u(169);
         Band.resetTriggers();
@@ -219,7 +219,7 @@ public final class Levels
         lv.item(Tex.FLASHLIGHT, Level.u(10), 78, Level.u(154), 11);
         lv.item(Tex.PAPER, Level.u(11), 78, Level.u(152), 12);
         lv.item(Tex.RADIO, Level.u(2), 78, Level.u(154), 13);
-        lv.item(Tex.CAN, x0 + 60, 118, Level.u(150), 14);
+        lv.item(Tex.CAN, Level.u(-7), 118, Level.u(150), 14);
 
         prog.step("cafe triggers");
         lv.trigger(Level.u(-13), Level.u(155), Level.u(-10), Level.u(162), 0, 5, 15);

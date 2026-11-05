@@ -97,7 +97,7 @@ public final class MapPanel
             int z1 = oy + (b.z1 / 100) * sc;
             if (x1 < 0 || x0 >= W) continue;
             if (z1 < clipY0 || z0 > clipY1) continue;
-            fb.rect(x0, Math.max(z0, clipY0), x1, Math.min(z1, clipY1), 0x2945);
+            fb.rect(x0, Math.max(z0, clipY0), x1, Math.min(z1, clipY1), 0x3186);
         }
 
         // colliders, as solid outlines
@@ -110,10 +110,12 @@ public final class MapPanel
             int z1 = oy + (Band.colData[o + 3] / 100) * sc;
             if (z1 < clipY0 || z0 > clipY1) continue;
             int y0 = Math.max(z0, clipY0), y1 = Math.min(z1, clipY1);
-            fb.hline(x0, x1, y0, 0x528A);
-            fb.hline(x0, x1, y1, 0x528A);
-            fb.hline(x0, x0, y0, 0x528A);
-            fb.hline(x1, x1, y0, 0x528A);
+            int ink = 0x8410;
+            // Fb only has horizontal lines, so the verticals are drawn with rect
+            fb.hline(x0, x1, y0, ink);
+            fb.hline(x0, x1, y1, ink);
+            fb.rect(x0, y0, x0 + 1, y1, ink);
+            fb.rect(x1 - 1, y0, x1, y1, ink);
         }
 
         // doors and points of interest
@@ -158,13 +160,34 @@ public final class MapPanel
         if (py >= clipY0 && py <= clipY1)
         {
             fb.rect(px - 2, py - 2, px + 2, py + 2, 0xFFFF);
-            int ax = px + (Core.sin(g.camYaw) * 8 >> 12);
-            int ay = py + (Core.cos(g.camYaw) * 8 >> 12);
-            fb.hline(px, ax, py, 0x07FF);
-            fb.hline(px, ax, ay, 0x07FF);
-            fb.hline(px, px, py, 0x07FF);
+            // view cone: a short chevron pointing where the camera looks
+            int ax = px + (Core.sin(g.camYaw) * 10 >> 12);
+            int ay = py + (Core.cos(g.camYaw) * 10 >> 12);
+            drawLine(fb, px, py, ax, ay, 0x07FF);
+            drawLine(fb, ax, ay, ax + (Core.sin(g.camYaw + 400) * 5 >> 12),
+                     ay + (Core.cos(g.camYaw + 400) * 5 >> 12), 0x07FF);
+            drawLine(fb, ax, ay, ax + (Core.sin(g.camYaw - 400) * 5 >> 12),
+                     ay + (Core.cos(g.camYaw - 400) * 5 >> 12), 0x07FF);
         }
 
         Font6.draw(fb, "# CLOSE   0 ZOOM   * FLOOR " + (floor + 1), 4, H - 12, 0x8410, 0x0000);
+    }
+
+    /** Bresenham, because Fb only offers horizontal spans. */
+    static void drawLine(Fb fb, int x0, int y0, int x1, int y1, int c)
+    {
+        int dx = x1 - x0, dy = y1 - y0;
+        int sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1;
+        if (dx < 0) dx = -dx;
+        if (dy < 0) dy = -dy;
+        int err = dx - dy;
+        for (int guard = 0; guard < 256; guard++)
+        {
+            fb.rect(x0, y0, x0, y0, c);
+            if (x0 == x1 && y0 == y1) break;
+            int e2 = err << 1;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
+        }
     }
 }

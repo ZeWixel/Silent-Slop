@@ -527,15 +527,23 @@ public final class Game
         if (player.attackTimer > 0) return;
 
         // 1) interact with a door / item in front of Harry
+        int best = -1, bestD = 1 << 30;
         for (int i = 0; i < Band.ntrig; i++)
         {
             int o = i * 7;
-            int kind = Band.trigData[o + 4];
-            if (kind != 2) continue;
+            if (Band.trigData[o + 4] != 2) continue;
             int x0 = Band.trigData[o], z0 = Band.trigData[o + 1];
             int x1 = Band.trigData[o + 2], z1 = Band.trigData[o + 3];
-            if (player.x < x0 - 40 || player.x > x1 + 40) continue;
-            if (player.z < z0 - 40 || player.z > z1 + 40) continue;
+            // nearest edge of the trigger, so a door is reachable from both sides
+            int dx = player.x < x0 ? x0 - player.x : (player.x > x1 ? player.x - x1 : 0);
+            int dz = player.z < z0 ? z0 - player.z : (player.z > z1 ? player.z - z1 : 0);
+            int d = dx + dz;
+            if (d > 60) continue;
+            if (d < bestD) { bestD = d; best = i; }
+        }
+        if (best >= 0)
+        {
+            int o = best * 7;
             int door = Band.trigData[o + 5];
             Sfx.play(Sfx.DOOR, 80);
             if (door == 1)
@@ -578,20 +586,20 @@ public final class Game
             shoot();
             return;
         }
-        int best = -1;
-        int bestD = 9999;
+        int target = -1;
+        int targetD = 9999;
         for (int i = 0; i < enemies.length; i++)
         {
             Enemy e = enemies[i];
             if (!e.active) continue;
             int d = e.hitTest(player);
-            if (d < bestD) { bestD = d; best = i; }
+            if (d < targetD) { targetD = d; target = i; }
         }
-        if (best >= 0 && bestD < 200)
+        if (target >= 0 && targetD < 200)
         {
             player.attackTimer = 12;
             Sfx.play(Sfx.HIT, 80);
-            enemies[best].hurt(player.hasKnife ? 12 : 6);
+            enemies[target].hurt(player.hasKnife ? 12 : 6);
             return;
         }
         // 4) just looked at something
