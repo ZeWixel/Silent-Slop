@@ -1,0 +1,3 @@
+build/
+*.class
+tools/__pycache__/
