@@ -5,4 +5,4 @@ MIDlet-1: Silent Slop, , ss.Midlet
 MIDlet-Jar-URL: SilentSlop.jar
 MicroEdition-Profile: MIDP-2.0
 MicroEdition-Configuration: CLDC-1.0
-MIDlet-Jar-Size: 68452
+MIDlet-Jar-Size: 64628

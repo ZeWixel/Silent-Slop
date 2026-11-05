@@ -4,7 +4,7 @@
 Прототип покрывает пролог (улица, разбитая машина, кафе «5 to 2») и сам уровень
 кафе.
 
-Готовые сборки: `releases/SilentSlop.jar` (~67 КБ) + `releases/SilentSlop.jad`.
+Готовые сборки: `releases/SilentSlop.jar` (~64 КБ) + `releases/SilentSlop.jad`.
 Работает на телефоне и в эмуляторах (J2ME Loader на Android, KEmulator).
 
 ## Сборка

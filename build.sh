@@ -77,8 +77,13 @@ fi
 if [ ! -f build/ss_raw.jar ]; then
   # zip(1) cannot inject a manifest, so the MIDlet attributes are written as an
   # ordinary entry: KVM reads META-INF/MANIFEST.MF from the archive either way.
+  # Fixed entry timestamps + -X (no extra attributes) make two builds of the
+  # same sources byte-identical, so a rebuild never leaves a spurious diff in
+  # releases/.
+  find build/classes -type f -exec touch -t 202001010000 {} +
   ( cd build/classes && \
-    zip -q -r ../ss_raw.jar . -x 'javax/*' 'com/*' )
+    find . -name '*.class' -o -name '*.mid' -o -name 'MANIFEST.MF' | sort | \
+    TZ=UTC zip -q -X -D ../ss_raw.jar -@ )
 fi
 
 # small JAR: strip nothing else, the resources are already minimal
