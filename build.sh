@@ -13,7 +13,11 @@ find src stubs -name '*.java' > build/sources.txt
 "$JAVAC" -source 1.3 -target 1.3 -Xlint:-options -g:none -nowarn \
     -d build/classes @build/sources.txt
 
-cp -r res/. build/classes/
+# Only the MIDI tracks are read at runtime.  res/ss_data.bin and the plan PNGs
+# are assetgen output used by the tools; shipping them would add ~115 kB of dead
+# weight to a MIDlet that gets ~700 kB of heap on an SE handset.
+mkdir -p build/classes/m
+cp res/m/*.mid build/classes/m/
 
 # JAD + manifest: SE phones refuse to install a JAR whose MIDlet attributes are
 # only in the manifest, and most launchers want the JAD next to it.

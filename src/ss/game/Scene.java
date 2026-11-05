@@ -44,9 +44,12 @@ public final class Scene
         int fz = Core.cos(g.camYaw);
         int camX = p.x - ((fx * chz) >> 12);
         int camZ = p.z - ((fz * chz) >> 12);
+        // The isometric look wants a high eye, and the height has to follow the
+        // zoom or a pulled-back view degenerates into a flat top-down diagram.
+        int camHeight = 120 + g.fov * 3;
         // Outside, lift the eye so roofs and wall tops read; inside, stay at
         // head height and hide the ceiling instead.
-        int camY = g.camHeight + ch + (lv.interior ? 0 : 120);
+        int camY = camHeight + ch + (lv.interior ? 0 : 120);
 
         // keep the camera out of walls: pull it in toward Harry
         for (int i = 0; i < 6 && g.isBlocked(camX, camZ, 34); i++)
@@ -159,7 +162,8 @@ public final class Scene
                                        p.z + ((Core.cos(p.angle) * 90) >> 12),
                                        g.flashWide, (g.flashWide * 5) / 6);
         }
-        Render3D.overlayFogVignette(g.fogVignette);
+        // A tighter zoom shows less of the screen, so it needs less vignette.
+        Render3D.overlayFogVignette(g.fov > 60 ? 4 : (g.fov > 34 ? 6 : 8));
     }
 
     static void drawItems(Game g, Band b)

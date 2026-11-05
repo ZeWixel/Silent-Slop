@@ -4,7 +4,7 @@
 Прототип покрывает пролог (улица, разбитая машина, кафе «5 to 2») и сам уровень
 кафе.
 
-Готовые сборки: `releases/SilentSlop.jar` + `releases/SilentSlop.jad`.
+Готовые сборки: `releases/SilentSlop.jar` (~66 КБ) + `releases/SilentSlop.jad`.
 
 ## Сборка
 
@@ -15,6 +15,16 @@ JAVA_HOME=/path/to/jdk8 ./build.sh
 `build.sh` компилирует `src/` вместе с заглушками `stubs/` под `-source 1.3
 -target 1.3` (так требует KVM), убирает заглушки `javax/*` и `com/nokia/*` из
 архива, кладёт манифест с MIDlet-атрибутами и пишет JAD с размером JAR.
+
+Проверка готового JAR (не дерева сборки):
+
+```sh
+JAVA_HOME=/path/to/jdk8 ./tools/verify_jar.sh
+```
+
+Скрипт распаковывает `releases/SilentSlop.jar`, грузит `ss.Midlet`, рендерит
+оба уровня, проверяет, что в архиве нет заглушек `javax/*` и `com/nokia/*`, и
+что все четыре MIDI читаются из JAR.
 
 ## Что уже сделано
 

@@ -362,13 +362,15 @@ public final class Game
                 Sfx.play(Sfx.MENU, 40);
             }
         }
+        // Zoom.  The projection is orthographic, so pulling the camera back does
+        // not change the size of anything: the zoom key has to move `fov`.
         if (in.tapped(Input.K7))
         {
-            if (camDist < 1100) camDist += 60;
+            if (fov > 20) fov -= 4;
         }
         if (in.tapped(Input.K9))
         {
-            if (camDist > 380) camDist -= 60;
+            if (fov < 96) fov += 4;
         }
 
         // ---- camera orbit (1, 3) - horizontal, (7, 9) - zoom, above
