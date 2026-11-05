@@ -49,7 +49,7 @@ public final class Game
     public int camDist = 520;
     public int camHeight = 210;
     /** Isometric zoom: 256 == one pixel per centimetre.  72 -> ~2.8 px per 10 cm. */
-    public int fov = 30;
+    public int fov = 34;
     public int frames;
     public int dtFrames = 1;
 

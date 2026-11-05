@@ -35,7 +35,7 @@ public final class Levels
         // Real-metric street: U is 40 cm, so u(25) == 10 m.  The road runs along
         // X, the two rows of buildings stand at z = -14u and z = +14u, and every
         // number below is roughly what the decomp says about the prologue block.
-        Level lv = new Level("prologue", false, 9, 2200, 5200, 0x632C, 800, 320);
+        Level lv = new Level("prologue", false, 11, 1500, 4200, 0x632C, 800, 320);
         lv.spawnX = Level.u(-6);
         lv.spawnZ = 0;
         lv.spawnAngle = 0;
@@ -48,11 +48,11 @@ public final class Levels
         // ---- ground -------------------------------------------------------
         // One quad per strip, no overlap anywhere: road, then the two sidewalks,
         // then the lots that run up to the building fronts.
-        lv.floor(Level.u(-120), Level.u(-11), Level.u(120), Level.u(11), 0, Tex.ROAD, 9, 0);
+        lv.floor(Level.u(-120), Level.u(-11), Level.u(120), Level.u(11), 0, Tex.ROAD, 8, 0);
         lv.floor(Level.u(-120), Level.u(-14), Level.u(120), Level.u(-11), 0, Tex.CONCRETE, 3, 0);
         lv.floor(Level.u(-120), Level.u(11), Level.u(120), Level.u(14), 0, Tex.CONCRETE, 3, 0);
-        lv.floor(Level.u(-120), Level.u(-70), Level.u(120), Level.u(-14), 0, Tex.GRASS, 24, 0);
-        lv.floor(Level.u(-120), Level.u(14), Level.u(120), Level.u(70), 0, Tex.GRASS, 24, 0);
+        lv.floor(Level.u(-120), Level.u(-70), Level.u(120), Level.u(-14), 0, Tex.GRASS, 6, 0);
+        lv.floor(Level.u(-120), Level.u(14), Level.u(120), Level.u(70), 0, Tex.GRASS, 6, 0);
         lv.box(Level.u(-120), 0, Level.u(-12), Level.u(120), 9, Level.u(-11),
                Tex.CONCRETE, 0, 3);
         lv.box(Level.u(-120), 0, Level.u(11), Level.u(120), 9, Level.u(12),
@@ -115,12 +115,18 @@ public final class Levels
 
         prog.step("street props");
         // ---- props ---------------------------------------------------------
-        lv.prop(Models.CAR, Level.u(-14), 0, Level.u(4), 0);
-        lv.prop(Models.CAR, Level.u(-26), 0, Level.u(4), 60);
-        lv.prop(Models.LAMP, Level.u(-30), 0, Level.u(-13), 0);
-        lv.prop(Models.LAMP, Level.u(6), 0, Level.u(-13), 0);
-        lv.prop(Models.LAMP, Level.u(-30), 0, Level.u(13), 0);
-        lv.prop(Models.LAMP, Level.u(46), 0, Level.u(-13), 0);
+        // parked cars down the south kerb, a second file on the north one: the
+        // street has to read as a street from every camera angle
+        lv.prop(Models.CAR, Level.u(-52), 0, Level.u(6), 40);
+        lv.prop(Models.CAR, Level.u(-40), 0, Level.u(6), 3550);
+        lv.prop(Models.CAR, Level.u(24), 0, Level.u(6), 30);
+        lv.prop(Models.CAR, Level.u(-20), 0, Level.u(-6), 2060);
+        for (int i = 0; i < 5; i++)
+        {
+            int x = Level.u(-84 + i * 40);
+            lv.prop(Models.LAMP, x, 0, Level.u(-13), 0);
+            lv.prop(Models.LAMP, x + Level.u(20), 0, Level.u(13), 2048);
+        }
         lv.prop(Models.DUMPSTER, Level.u(-42), 0, Level.u(-16), 0);
         lv.prop(Models.TRASHCAN, Level.u(-44), 0, Level.u(-12), 0);
         lv.prop(Models.TRASHCAN, Level.u(20), 0, Level.u(12), 0);
@@ -128,9 +134,12 @@ public final class Levels
         lv.prop(Models.BENCH, Level.u(-60), 0, Level.u(12), 0);
         lv.prop(Models.ROAD_SIGN, Level.u(-34), 0, Level.u(-12), 0);
         lv.prop(Models.ROAD_SIGN, Level.u(34), 0, Level.u(12), 0);
-        lv.prop(Models.WEEDS, Level.u(-16), 0, Level.u(-13), 0);
-        lv.prop(Models.WEEDS, Level.u(58), 0, Level.u(13), 0);
-        lv.prop(Models.WEEDS, Level.u(-70), 0, Level.u(-13), 0);
+        for (int i = 0; i < 7; i++)
+        {
+            int x = Level.u(-96 + i * 28);
+            lv.prop(Models.WEEDS, x, 0, Level.u(-13 - (i & 1) * 2), 0);
+            lv.prop(Models.WEEDS, x + Level.u(9), 0, Level.u(13 + (i & 1) * 2), 0);
+        }
         lv.prop(Models.BLOOD, Level.u(-4), 0, Level.u(2), 0);
 
         // ---- items ---------------------------------------------------------

@@ -485,9 +485,11 @@ public final class Gen
         speckle(t, 0, 0, 31, 31, new int[]{14, 16, 13, 4}, 200);
         v.addElement(t);
 
-        // 45 grass
+        // 45 grass: dark, damp, almost nothing but a hint of dead foliage -
+        // a bright lawn would fight the fog and the mood
         t = new Tex(16, 16); fill(t, 29);
-        speckle(t, 0, 0, 15, 15, new int[]{29, 30, 31, 27}, 140);
+        speckle(t, 0, 0, 15, 15, new int[]{29, 30, 27}, 60);
+        speckle(t, 0, 0, 15, 15, new int[]{31}, 12);
         v.addElement(t);
 
         // 46 siding

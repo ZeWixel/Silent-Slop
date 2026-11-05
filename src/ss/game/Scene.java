@@ -88,16 +88,16 @@ public final class Scene
         {
             // Tiled, not one giant quad: fog is per face, so a single 480 m
             // quad would be fogged by its average depth and grey out the screen.
-            int T = 4000;
+            int T = 2000;
             int gx = (p.x / T) * T;
             int gz = (p.z / T) * T;
-            for (int tz = -3; tz <= 3; tz++)
+            for (int tz = -6; tz <= 6; tz++)
             {
-                for (int tx = -3; tx <= 3; tx++)
+                for (int tx = -6; tx <= 6; tx++)
                 {
                     int x0 = gx + tx * T, z0 = gz + tz * T;
                     Render3D.drawFloor(x0, z0, x0 + T, z0 + T, -8,
-                                       ss.gen.Tex.GRASS, 90, 0);
+                                       ss.gen.Tex.GRASS, 46, 0);
                 }
             }
             Render3D.flush();
@@ -113,8 +113,8 @@ public final class Scene
         }
 
         // ---- 2. walls, far to near ----------------------------------------
-        // A simple ordering by band distance keeps the painter sort honest for
-        // the big wall quads; the per-face sort inside a flush does the rest.
+        // Bands are flushed far to near so the painter sort starts from the
+        // correct order; within a band the per-face sort does the rest.
         for (int pass = 0; pass < 2; pass++)
         {
             for (int i = 0; i < n; i++)
@@ -126,11 +126,10 @@ public final class Scene
                 boolean near = d < CUT_RADIUS;
                 if ((pass == 0) == near) continue;      // far pass first
                 Render3D.drawBand(b.mesh, 0, 0, 0);
-                if (Render3D.needsFlush()) Render3D.flush();
             }
         }
 
-        // ---- 3. props, items and characters (on top of the walls) --------------------------------------
+        // ---- 3. props, items and characters (on top of the walls) ---------
         for (int i = 0; i < n; i++)
         {
             Band b = lv.bands[i];
