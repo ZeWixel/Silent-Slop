@@ -200,14 +200,16 @@ public final class Gen
         rect(t, 0, 26, 31, 31, 25);
         v.addElement(t);
 
-        // 7 checker floor
-        t = new Tex(32, 32); fill(t, 9);
-        for (int ty = 0; ty < 32; ty += 8)
-            for (int tx = 0; tx < 32; tx += 8)
+        // 7 cafe floor tiles: worn linoleum in two close greys, small enough
+        // that the room reads as tiled without turning into a chessboard
+        t = new Tex(32, 32); fill(t, 7);
+        for (int ty = 0; ty < 32; ty += 16)
+            for (int tx = 0; tx < 32; tx += 16)
             {
-                int c = (((tx + ty) / 8) % 2 == 0) ? 9 : 6;
-                rect(t, tx, ty, tx + 6, ty + 6, c);
-                for (int k = 0; k < 8; k++) { px(t, tx + 7, ty + k, 6); px(t, tx + k, ty + 7, 6); }
+                int c = (((tx + ty) / 16) % 2 == 0) ? 8 : 6;
+                rect(t, tx, ty, tx + 15, ty + 15, c);
+                speckle(t, tx, ty, tx + 15, ty + 15, new int[]{c, c, c, 5}, 30);
+                for (int k = 0; k < 16; k++) { px(t, tx + 15, ty + k, 5); px(t, tx + k, ty + 15, 5); }
             }
         v.addElement(t);
 
@@ -583,6 +585,10 @@ public final class Gen
 
         public void tri(int a, int b, int c, int tex, int col, int flags)
         {
+            // Flat shading uses `col` as a palette index.  Almost every caller
+            // passes 0, which is black, so derive a sane colour from the
+            // texture instead: models stay readable in MODE_FLAT.
+            if (col == 0 && tex >= 0 && tex < 64) col = FLATCOL[tex];
             growF();
             fi[nf * 3] = a; fi[nf * 3 + 1] = b; fi[nf * 3 + 2] = c;
             ftex[nf] = tex; fcol[nf] = col; fflags[nf] = flags;
@@ -618,6 +624,20 @@ public final class Gen
             quad(x0, y1, z1, x1, y1, z1, x1, y1, z0, x0, y1, z0, tex, col, flags, uvs);
             if (y0 > 0)
                 quad(x0, y0, z0, x1, y0, z0, x1, y0, z1, x0, y0, z1, tex, col, flags, uvs);
+        }
+
+        public static final int[] FLATCOL = new int[64];
+
+        static
+        {
+            // A coarse but plausible colour per texture id, used by flat shading.
+            int[] c = {
+                13, 14, 17, 21, 23, 8, 17, 10, 26, 13, 37, 2, 21, 26, 26, 22,
+                3, 37, 10, 18, 30, 19, 33, 33, 16, 19, 10, 10, 10, 3, 23, 21,
+                34, 33, 44, 47, 47, 40, 4, 16, 10, 26, 26, 24, 8, 29, 19, 33,
+                10, 17, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
+            };
+            for (int i = 0; i < FLATCOL.length; i++) FLATCOL[i] = c[i % c.length];
         }
 
         public Model toModel(String name)

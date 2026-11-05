@@ -375,30 +375,33 @@ public final class Render3D
     }
 
     /** Cheap contact shadow: an ellipse of the darkest palette entry. */
+    /**
+     * Contact shadow.
+     *
+     * Emitted as two flat triangles through the same sorted face buffer as the
+     * rest of the scene.  Writing straight into the framebuffer (the obvious
+     * way) paints black ovals over furniture and over Harry's own feet, because
+     * it ignores the painter order completely.
+     */
     public static void drawShadow(int wx, int wz, int r)
     {
-        project(wx, 2, wz);
-        int cx = tx, cy = ty;
-        int rr = (r * scale) >> 8;
-        if (rr < 2) rr = 2;
-        int ry = (rr * 5) >> 3;         // squashed: the camera looks down 30 deg
-        short sv = out[(0 * FG + fogOf(tz, 0)) * PALN];
-        short[] p = fb.px;
-        int W = fb.w, H = fb.h;
-        for (int y = -ry; y <= ry; y++)
-        {
-            int yy = cy + y;
-            if (yy < 0 || yy >= H) continue;
-            int k = (y * 64) / (ry == 0 ? 1 : ry);
-            int half = rr - ((k * k * rr) >> 12);
-            if (half < 0) half = 0;
-            int l = cx - half, rgt = cx + half;
-            if (l < 0) l = 0;
-            if (rgt >= W) rgt = W - 1;
-            int o = yy * W;
-            for (int x = l; x <= rgt; x++) p[o + x] = sv;
-        }
+        int[] qx = shx, qy = shy, qz = shz;
+        camSpace(wx - r, 2, wz + r, qx, qy, qz, 0);
+        camSpace(wx + r, 2, wz + r, qx, qy, qz, 1);
+        camSpace(wx + r, 2, wz - r, qx, qy, qz, 2);
+        camSpace(wx - r, 2, wz - r, qx, qy, qz, 3);
+        int depth = (qz[0] + qz[1] + qz[2] + qz[3]) >> 2;
+        if (depth < ZNEAR) return;
+        int col = out[fogOf(depth, 0) * PALN];      // darkest palette entry
+        emitFlatClipped(qx[0], qy[0], qz[0], qx[1], qy[1], qz[1],
+                        qx[2], qy[2], qz[2], col, depth);
+        emitFlatClipped(qx[0], qy[0], qz[0], qx[2], qy[2], qz[2],
+                        qx[3], qy[3], qz[3], col, depth);
     }
+
+    static final int[] shx = new int[4];
+    static final int[] shy = new int[4];
+    static final int[] shz = new int[4];
 
     // ------------------------------------------------------------------ bands
     /**
