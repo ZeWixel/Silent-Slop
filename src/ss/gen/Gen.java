@@ -200,15 +200,18 @@ public final class Gen
         rect(t, 0, 26, 31, 31, 25);
         v.addElement(t);
 
-        // 7 cafe floor tiles: worn linoleum in two close greys, small enough
-        // that the room reads as tiled without turning into a chessboard
+        // 7 cafe floor tiles: worn linoleum, a warm grey with a faint checker so
+        // the floor has texture without reading as a chessboard under the lamp
         t = new Tex(32, 32); fill(t, 7);
         for (int ty = 0; ty < 32; ty += 16)
             for (int tx = 0; tx < 32; tx += 16)
             {
-                int c = (((tx + ty) / 16) % 2 == 0) ? 8 : 6;
+                int c = (((tx + ty) / 16) % 2 == 0) ? 8 : 7;
                 rect(t, tx, ty, tx + 15, ty + 15, c);
-                speckle(t, tx, ty, tx + 15, ty + 15, new int[]{c, c, c, 5}, 30);
+                // a little dirt, in the tile's own colour: coloured speckles
+                // read as confetti at this resolution
+                speckle(t, tx, ty, tx + 15, ty + 15, new int[]{c, c, 5, c}, 20);
+                // grout: one dark line per tile edge, not a black grid
                 for (int k = 0; k < 16; k++) { px(t, tx + 15, ty + k, 5); px(t, tx + k, ty + 15, 5); }
             }
         v.addElement(t);

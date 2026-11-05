@@ -62,9 +62,10 @@ public final class Scene
 
         if (lv.interior)
         {
-            // Interiors: a dark wash instead of pure black - the walls of the
-            // room are cut away, so what shows through must still read as night.
-            fb.vgrad(Core.mix565(g.fogColor, 0x0000, 130), Core.mix565(g.fogColor, 0x0000, 210));
+            // Interiors: the room is drawn with its walls cut away by the
+            // camera, so everything "outside" it is the void behind the set -
+            // pure black, like the original's unlit backdrops.
+            fb.clear(0x0000);
         }
         else
         {
