@@ -80,6 +80,8 @@ javac -nowarn -g -d build/dev @build/devsrc.txt
 java -cp build/dev Preview     # 8 поворотов пролога + 4 кафе в /tmp/shots/*.png
 java -cp build/dev Smoke       # 4000 кадров случайного ввода во всех экранах
 java -cp build/dev Combat      # спавн врага, ближний бой, смерть
+java -cp build/dev Wrap        # проверка переносов текста и ширины подписей
+java -cp build/dev Menus       # скриншоты паузы и dev-меню, переключение опций
 ```
 
 ## Правовой статус

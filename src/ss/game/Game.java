@@ -740,9 +740,20 @@ public final class Game
     }
 
     // ------------------------------------------------------------------- menus
+    /** Live values for the pause menu's "LABEL: value" rows. */
+    private final String[] pauseValues = new String[Texts.PAUSE.length];
+
+    void refreshPauseValues()
+    {
+        pauseValues[3] = objMode == ss.core.Render3D.MODE_TEX ? "TEX" : "FLAT";
+        pauseValues[4] = tankControls ? "TANK" : "CAM";
+        pauseValues[6] = Music.isEnabled() ? "ON" : "OFF";
+    }
+
     void openPause()
     {
-        menu.reset(Texts.PAUSE);
+        refreshPauseValues();
+        menu.reset(Texts.PAUSE, pauseValues);
         menu.sel = 0;
         state = S_PAUSE;
         Music.pause();
@@ -779,9 +790,11 @@ public final class Game
                 break;
             case 3:
                 objMode = (objMode + 1) % 2;
+                refreshPauseValues();
                 break;
             case 4:
                 tankControls = !tankControls;
+                refreshPauseValues();
                 break;
             case 5:
                 devMode = !devMode;
@@ -790,6 +803,7 @@ public final class Game
                 // options: music / sfx toggles
                 Music.setEnabled(!Music.isEnabled());
                 Sfx.setEnabled(Music.isEnabled());
+                refreshPauseValues();
                 break;
             case 7:
                 state = S_DEV;

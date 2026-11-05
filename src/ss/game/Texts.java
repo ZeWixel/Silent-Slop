@@ -70,7 +70,7 @@ public final class Texts
         "OBJECT RENDER: " ,
         "CONTROLS: ",
         "DEVELOPER MODE",
-        "SOUND",
+        "SOUND: ",
         "DEV MENU",
         "LOAD: PROLOGUE",
         "LOAD: 5 TO 2"

@@ -47,7 +47,7 @@ public class Play {
 
     // 5) pick up the knife, a health drink and the flashlight in the cafe
     pickAt(Level.u(9), Level.u(158));
-    pickAt(Level.u(-11), Level.u(150));
+    pickAt(Level.u(-7), Level.u(150));
     pickAt(Level.u(10), Level.u(154));
     System.out.println("inventory: knife=" + g.player.hasKnife + " drinks=" + g.player.healthDrinks
         + " flashlight=" + g.player.hasFlashlight + " radio=" + g.player.hasRadio);
@@ -98,8 +98,11 @@ public class Play {
     step(2);
   }
   static void pickAt(int x, int z) {
+    // a message from the previous pickup would swallow the A press, so clear
+    // it before walking up to the item
+    g.state = Game.S_PLAY;
     g.player.x = x; g.player.z = z;
-    Input in = new Input(); in.pressed[Input.A] = true;
+    Input in = new Input(); in.keyDown(Input.A);
     g.update(in);
     g.state = Game.S_PLAY;
   }

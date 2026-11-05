@@ -10,6 +10,8 @@ import ss.snd.Sfx;
  */
 public final class Menu
 {
+    /** Value substitution for labels ending in ':' - set per open. */
+    public String[] values;
     public static final int CANCELLED = -2;
     public static final int NOTHING = -1;
 
@@ -20,8 +22,20 @@ public final class Menu
     public void reset(String[] items)
     {
         this.items = items;
+        this.values = null;
         sel = 0;
         top = 0;
+    }
+
+    /**
+     * Reset with live values for the labels that end in ':' (the pause menu
+     * shows "OBJECT RENDER: TEX" this way, so the label and its current
+     * setting never drift apart).
+     */
+    public void reset(String[] items, String[] values)
+    {
+        reset(items);
+        this.values = values;
     }
 
     public int update(Input in)
@@ -62,7 +76,11 @@ public final class Menu
                 Font6.draw(fb, ">", x + 3, yy, 0xFFE0, 0x0000);
             }
             String s = items[i];
-            if (s != null && s.length() > 22) s = s.substring(0, 22);
+            if (values != null && i < values.length && values[i] != null)
+                s = s + values[i];
+            // clip to the panel width instead of a fixed character count
+            int maxCh = (w - 16) / Font6.W;
+            if (s != null && s.length() > maxCh) s = s.substring(0, maxCh);
             Font6.draw(fb, s, x + 12, yy, i == sel ? 0xFFFF : 0x9E79, 0x0000);
         }
     }
