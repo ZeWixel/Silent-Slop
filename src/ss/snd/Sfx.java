@@ -41,6 +41,8 @@ public final class Sfx
     static byte[] mixBuf = new byte[1600];
     static Thread thread;
     static volatile boolean running;
+    /** True once the mixer thread has something to play. */
+    static volatile boolean dirty;
 
     private Sfx() {}
 
@@ -126,24 +128,67 @@ public final class Sfx
         }
     }
 
+    /**
+     * Brings the audio channel up on its own thread.
+     *
+     * This must never run on the caller's thread: a lot of implementations
+     * (J2ME-Loader among them) copy the whole stream to a temporary file inside
+     * createPlayer(), so opening it synchronously would stall the game for the
+     * duration of the buffer.  It also runs exactly once - retrying on every
+     * sound was the reason a failing device used to stutter.
+     */
     static void start()
     {
-        if (!audioAvailable) return;
-        if (player != null) return;
-        try
+        if (!audioAvailable || started || !enabled) return;
+        started = true;
+        Thread t = new Thread()
         {
-            javax.microedition.media.Player p =
-                Manager.createPlayer(new PcmStream(), "audio/x-wav");
-            p.realize();
-            p.prefetch();
-            p.start();
-            player = p;
-        }
-        catch (Throwable e)
-        {
-            audioAvailable = false;
-            player = null;
-        }
+            public void run()
+            {
+                try
+                {
+                    javax.microedition.media.Player p =
+                        Manager.createPlayer(new PcmStream(), "audio/x-wav");
+                    p.realize();
+                    p.prefetch();
+                    p.start();
+                    player = p;
+                }
+                catch (Throwable e)
+                {
+                    // no JSR-135, no WAV, or out of players: stay silent, but
+                    // do not give up for good - some devices only fail while
+                    // another player (the MIDI track) is starting up
+                    started = false;
+                    reopenDelay = 120;
+                    if (++failures > 3) { audioAvailable = false; failed = true; }
+                    player = null;
+                }
+            }
+        };
+        thread = t;
+        try { t.start(); }
+        catch (Throwable e) { audioAvailable = false; }
+    }
+
+    static boolean started = false;
+    static boolean failed = false;
+    static int failures;
+    static int reopenDelay;
+
+    /**
+     * Keeps the audio channel alive.  Called once per frame by the game loop:
+     * the stream is deliberately finite (see {@link PcmStream}), so when one
+     * chunk of playback runs out the channel is opened again while the old
+     * sound effects simply carry on mixing into the new one.
+     */
+    public static void tick()
+    {
+        if (!audioAvailable || !enabled) return;
+        if (started) return;
+        if (reopenDelay > 0) { reopenDelay--; return; }
+        if (failed) return;
+        start();
     }
 
     public static void stopAll()
@@ -155,6 +200,7 @@ public final class Sfx
     public static void release()
     {
         stopAll();
+        started = false;
         if (player != null)
         {
             try
@@ -215,16 +261,35 @@ public final class Sfx
 
     static final int[] accBuf = new int[1600];
 
-    /** The endless WAV stream handed to JSR-135. */
+    /**
+     * The WAV stream handed to JSR-135.
+     *
+     * The header claims a fixed, finite length ({@link #SECONDS}).  An endless
+     * stream looks tempting - the mixer simply never stops feeding - but a
+     * handset's player (and any emulator that copies the stream to a file
+     * before playing) reads to EOF first, so "endless" means "hangs forever".
+     * When the game goes quiet the stream keeps producing silence, so the
+     * channel stays open and the next sound effect starts instantly.
+     */
+    static final int SECONDS = 12;
+
+    /** Test hooks: the exact stream a device is handed, and its header size. */
+    public static java.io.InputStream streamForTest() { return new PcmStream(); }
+
+    public static int headerSizeForTest()
+    {
+        byte[] h = header();
+        return (h[40] & 0xFF) | ((h[41] & 0xFF) << 8) | ((h[42] & 0xFF) << 16) | ((h[43] & 0xFF) << 24);
+    }
+
     static final class PcmStream extends java.io.InputStream
     {
-        int state = 0;
+        int state = 0;              // 0 = header, 1 = PCM
         int offset = 0;
-        byte[] buf = new byte[1600];
+        long left = (long) RATE * SECONDS;
 
         public int read() throws IOException
         {
-            if (buf == null) return -1;
             byte[] one = new byte[1];
             int n = read(one, 0, 1);
             return n <= 0 ? -1 : (one[0] & 0xFF);
@@ -238,26 +303,36 @@ public final class Sfx
                 int n = Math.min(len, h.length - offset);
                 System.arraycopy(h, offset, b, off, n);
                 offset += n;
-                if (offset >= h.length) { state = 1; offset = 0; }
+                if (offset >= h.length) { state = 1; }
                 return n;
             }
-            int n = mix(b, len);
-            if (n <= 0) return -1;
+            if (left <= 0)
+            {
+                // end of the declared data chunk, exactly as the header says;
+                // tick() opens a fresh one on the next frame
+                started = false;
+                player = null;
+                return -1;
+            }
+            int n = (int) (len < left ? len : left);
+            mix(b, n);
+            left -= n;
             return n;
         }
 
         public int available()
         {
-            return 1600;
+            if (state == 0) return 44;
+            return (int) (left < 1600 ? left : 1600);
         }
 
         public void close() {}
     }
 
-    /** 44 byte canonical mono 8 kHz 8 bit PCM WAV header = 0x7FFFFFFF samples. */
+    /** 44 byte canonical mono 8 kHz 8 bit PCM WAV header. */
     static byte[] header()
     {
-        int size = 0x7FFFFF00;
+        int size = RATE * SECONDS;
         byte[] h = new byte[44];
         h[0] = 'R'; h[1] = 'I'; h[2] = 'F'; h[3] = 'F';
         le32(h, 4, size);

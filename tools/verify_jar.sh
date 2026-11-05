@@ -5,6 +5,18 @@
 # classpath last, exactly like a phone would provide them.
 set -e
 JAVA_HOME=${JAVA_HOME:-/tmp/tools_linux_jdk8}
+JAVA="$JAVA_HOME/bin/java"
+JAVAC="$JAVA_HOME/bin/javac"
+ECJ=${ECJ:-$JAVA_HOME/ecj.jar}
+# compile() picks a Java 8 javac when there is one, otherwise the Eclipse batch
+# compiler from $ECJ (any JDK 9+ can run it and it still emits class file 45.3)
+compile() {
+  if [ -x "$JAVAC" ] && "$JAVAC" -version 2>&1 | grep -q '^1\.'; then
+    "$JAVAC" -nowarn "$@"
+  else
+    "$JAVA" -cp "$ECJ" org.eclipse.jdt.internal.compiler.batch.Main -nowarn "$@"
+  fi
+}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 TMP=${TMPDIR:-/tmp}/ssverify
 rm -rf "$TMP"
@@ -22,7 +34,7 @@ if find "$TMP/jar" -path '*/javax/*' -o -path '*/com/nokia/*' | grep -q .; then
 fi
 
 (cd "$ROOT" && find stubs -name '*.java' > "$TMP/stubs.txt")
-"$JAVA_HOME/bin/javac" -nowarn -d "$TMP/stubs" @"$TMP/stubs.txt"
+compile -d "$TMP/stubs" @"$TMP/stubs.txt"
 
 cat > "$TMP/Harness.java" <<'EOF'
 import ss.core.*; import ss.game.*;
@@ -48,5 +60,17 @@ public class Harness {
 }
 EOF
 
-"$JAVA_HOME/bin/javac" -nowarn -cp "$TMP/jar" -d "$TMP/out" "$TMP/Harness.java"
-"$JAVA_HOME/bin/java" -cp "$TMP/jar:$TMP/out:$TMP/stubs" Harness
+compile -cp "$TMP/jar" -d "$TMP/out" "$TMP/Harness.java"
+
+# Conformance: every javax.microedition reference in the JAR must exist in a
+# real implementation.  A wrong package name in stubs/ (GameCanvas in
+# javax.microedition.lcdui instead of ...lcdui.game) passes javac and then
+# NoClassDefFoundErrors on the device - this catches it before shipping.
+API=${J2ME_API_DIR:-/tmp/jl/J2ME-Loader-master/app/src/main/java}
+if [ -d "$API" ]; then
+  python3 "$ROOT/tools/conformance/check.py" "$TMP/jar" "$API" || exit 1
+else
+  echo "  (skipped API conformance: no J2ME sources at $API)"
+fi
+
+"$JAVA" -cp "$TMP/jar:$TMP/out:$TMP/stubs" Harness

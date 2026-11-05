@@ -17,6 +17,7 @@ public class Font
     protected Font() {}
 
     public static Font getFont(int spec) { return null; }
+    public static Font getFont(int face, int style, int size) { return null; }
     public static Font getDefaultFont() { return null; }
 
     public int getHeight() { return 0; }

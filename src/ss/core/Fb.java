@@ -21,6 +21,16 @@ public final class Fb
         px = new short[w * h];
     }
 
+    public int getW()
+    {
+        return w;
+    }
+
+    public int getH()
+    {
+        return h;
+    }
+
     public void clear(int c)
     {
         short v = (short) c;

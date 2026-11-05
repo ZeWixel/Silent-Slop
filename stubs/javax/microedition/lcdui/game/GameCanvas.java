@@ -1,4 +1,7 @@
-package javax.microedition.lcdui;
+package javax.microedition.lcdui.game;
+
+import javax.microedition.lcdui.Canvas;
+import javax.microedition.lcdui.Graphics;
 
 /** Compile-time stub of MIDP 2.0 GameCanvas. */
 public abstract class GameCanvas extends Canvas

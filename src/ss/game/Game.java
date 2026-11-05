@@ -225,6 +225,7 @@ public final class Game
         }
 
         Music.update();
+        ss.snd.Sfx.tick();
         if (state == S_TITLE)
         {
             updateTitle(in);

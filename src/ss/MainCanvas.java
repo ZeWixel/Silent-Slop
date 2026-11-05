@@ -1,7 +1,8 @@
 package ss;
 
-import javax.microedition.lcdui.GameCanvas;
+import javax.microedition.lcdui.game.GameCanvas;
 import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Image;
 import javax.microedition.midlet.MIDlet;
 
@@ -38,14 +39,30 @@ public final class MainCanvas extends GameCanvas implements Runnable
     public MainCanvas()
     {
         super(false);
-        setFullScreenMode(true);
     }
 
+    /**
+     * Called by the MIDlet from startApp().  Full screen is requested here and
+     * not in the constructor: a handset (and an emulator) only knows the real
+     * screen size once the canvas is shown, and on some devices the widths are
+     * still 0 in the constructor.
+     */
     void init(MIDlet m)
     {
         midlet = m;
+        try
+        {
+            setFullScreenMode(true);
+        }
+        catch (Throwable e) { /* MIDP 1.0 handset: windowed, still playable */ }
         int w = getWidth();
         int h = getHeight();
+        if (w <= 0 || h <= 0)
+        {
+            // not shown yet - fall back to the reference handset (176x208)
+            w = 176;
+            h = 208;
+        }
         // internal resolution, chosen so the software rasterizer never has to
         // fill more than ~24k pixels; the result is scaled with one blit
         int iw = 176, ih = 208;
@@ -75,9 +92,25 @@ public final class MainCanvas extends GameCanvas implements Runnable
             {
                 game.dtFrames = dt / 80;
                 if (game.dtFrames < 1) game.dtFrames = 1;
-                game.update(input);
+                try
+                {
+                    game.update(input);
+                }
+                catch (Throwable e)
+                {
+                    fatal(e);
+                    return;
+                }
             }
-            render();
+            try
+            {
+                render();
+            }
+            catch (Throwable e)
+            {
+                fatal(e);
+                return;
+            }
             try
             {
                 Thread.sleep(8);
@@ -88,6 +121,8 @@ public final class MainCanvas extends GameCanvas implements Runnable
 
     private void render()
     {
+        if (game == null || low == null || high == null) return;
+        fitScreen();
         game.draw(low);
         int w = high.w, h = high.h;
         if (low.w == w && low.h == h)
@@ -99,6 +134,49 @@ public final class MainCanvas extends GameCanvas implements Runnable
             low.upscaleTo(high);
         }
         blit();
+    }
+
+    /**
+     * Re-fits the framebuffers when the device reports a new screen size.
+     * Phones with a rotatable / resizable screen (and emulator profiles that
+     * change resolution) would otherwise blit a stale-sized buffer.
+     */
+    private void fitScreen()
+    {
+        int w = getWidth();
+        int h = getHeight();
+        if (w <= 0 || h <= 0) return;
+        if (w == high.getW() && h == high.getH()) return;
+        high = new Fb(w, h);
+        int iw = 176, ih = 208;
+        if (w > 200) { iw = 200; ih = 240; }
+        if (w >= 220) { iw = 208; ih = 256; }
+        low = new Fb(iw, ih);
+        frameImg = null;
+        frameG = null;
+        rgbBuf = null;
+    }
+
+    /** Shows the reason a frame blew up instead of dying silently. */
+    private void fatal(Throwable e)
+    {
+        running = false;
+        try
+        {
+            Graphics g = getGraphics();
+            g.setColor(0x000000);
+            g.fillRect(0, 0, getWidth(), getHeight());
+            g.setColor(0xFF4040);
+            Font f = Font.getFont(Font.FACE_PROPORTIONAL, Font.STYLE_PLAIN, Font.SIZE_SMALL);
+            g.setFont(f);
+            g.drawString("Silent Slop failed", 4, 4, Graphics.TOP | Graphics.LEFT);
+            String m = e.toString();
+            for (int i = 0, y = 20; i < m.length() && y < getHeight() - 8; i += 20, y += f.getHeight())
+                g.drawString(m.substring(i, Math.min(m.length(), i + 20)), 4, y,
+                             Graphics.TOP | Graphics.LEFT);
+            flushGraphics();
+        }
+        catch (Throwable ignored) {}
     }
 
     /**

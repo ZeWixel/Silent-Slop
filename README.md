@@ -1,10 +1,11 @@
 # Silent-Slop
 
-Псевдо-демейк **Silent Hill 1** для J2ME (Sony Ericsson, MIDP-1.0 / CLDC-1.0).
+Псевдо-демейк **Silent Hill 1** для J2ME (Sony Ericsson, MIDP-2.0 / CLDC-1.0).
 Прототип покрывает пролог (улица, разбитая машина, кафе «5 to 2») и сам уровень
 кафе.
 
-Готовые сборки: `releases/SilentSlop.jar` (~66 КБ) + `releases/SilentSlop.jad`.
+Готовые сборки: `releases/SilentSlop.jar` (~67 КБ) + `releases/SilentSlop.jad`.
+Работает на телефоне и в эмуляторах (J2ME Loader на Android, KEmulator).
 
 ## Сборка
 
@@ -15,6 +16,12 @@ JAVA_HOME=/path/to/jdk8 ./build.sh
 `build.sh` компилирует `src/` вместе с заглушками `stubs/` под `-source 1.3
 -target 1.3` (так требует KVM), убирает заглушки `javax/*` и `com/nokia/*` из
 архива, кладёт манифест с MIDlet-атрибутами и пишет JAD с размером JAR.
+Если `javac` новее восьмёрки (он уже не умеет `-source 1.3`), сборка берёт
+Eclipse batch compiler из `$ECJ` — результат тот же class file 45.3:
+
+```sh
+JAVA_HOME=/path/to/jdk17 ECJ=/path/to/ecj.jar ./build.sh
+```
 
 Проверка готового JAR (не дерева сборки):
 
@@ -25,6 +32,18 @@ JAVA_HOME=/path/to/jdk8 ./tools/verify_jar.sh
 Скрипт распаковывает `releases/SilentSlop.jar`, грузит `ss.Midlet`, рендерит
 оба уровня, проверяет, что в архиве нет заглушек `javax/*` и `com/nokia/*`, и
 что все четыре MIDI читаются из JAR.
+
+Отдельно проверяется совместимость с настоящим API, а не только с `stubs/`:
+
+```sh
+python3 tools/conformance/check.py build/classes /path/to/J2ME-Loader/app/src/main/java
+```
+
+Он читает пул констант всех собранных классов и сверяет каждую ссылку на
+`javax.microedition.*` с исходниками реальной реализации. Ровно такой промах
+(класс `GameCanvas` лежал в `javax.microedition.lcdui` вместо
+`...lcdui.game`) проходил мимо javac и ронял игру на старте с
+`NoClassDefFoundError`.
 
 ## Что уже сделано
 
@@ -82,6 +101,8 @@ java -cp build/dev Smoke       # 4000 кадров случайного ввод
 java -cp build/dev Combat      # спавн врага, ближний бой, смерть
 java -cp build/dev Wrap        # проверка переносов текста и ширины подписей
 java -cp build/dev Menus       # скриншоты паузы и dev-меню, переключение опций
+java -cp build/dev Boot        # запуск через startApp(), в т.ч. без известного размера экрана
+java -cp build/dev Audio       # WAV-поток звуковых эффектов конечен и корректен
 ```
 
 ## Правовой статус

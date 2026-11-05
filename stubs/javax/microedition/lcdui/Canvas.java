@@ -46,7 +46,22 @@ public abstract class Canvas extends Displayable
     public int getKeyCode(int gameAction) { return 0; }
     public String getKeyName(int keyCode) { return null; }
     public boolean hasPointerEvents() { return false; }
-    public int getWidth() { return 0; }
-    public int getHeight() { return 0; }
+    /**
+     * Screen metrics.  A real handset reports the screen it was given; this stub
+     * reports a Sony Ericsson reference screen so the desktop harness can drive
+     * the boot path.  {@link #setScreenSizeForTest} lets a test simulate a
+     * device that has not measured its display yet.
+     */
+    private static int screenW = 176;
+    private static int screenH = 208;
+
+    public static void setScreenSizeForTest(int w, int h)
+    {
+        screenW = w;
+        screenH = h;
+    }
+
+    public int getWidth() { return screenW; }
+    public int getHeight() { return screenH; }
     protected void sizeChanged(int w, int h) {}
 }

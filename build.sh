@@ -2,16 +2,27 @@
 # Silent-Slop build: JDK 8 targeting Java 1.3 / CLDC 1.0 bytecode.
 set -e
 JAVA_HOME=${JAVA_HOME:-/tmp/tools_linux_jdk8}
-JAVAC="$JAVA_HOME/bin/javac"
 JAVA="$JAVA_HOME/bin/java"
+JAVAC="$JAVA_HOME/bin/javac"
 PROGUARD=${PROGUARD:-/tmp/LLM-J2ME-SUITE/libs/proguard.jar}
+# Newer JDKs (9+) dropped -source/-target 1.3, so the build falls back to the
+# Eclipse batch compiler on the classpath, which still emits class file 45.3.
+ECJ=${ECJ:-$JAVA_HOME/ecj.jar}
 
 rm -rf build/classes build/ss_raw.jar
 mkdir -p build/classes releases
 
 find src stubs -name '*.java' > build/sources.txt
-"$JAVAC" -source 1.3 -target 1.3 -Xlint:-options -g:none -nowarn \
-    -d build/classes @build/sources.txt
+if [ -x "$JAVAC" ] && "$JAVAC" -version 2>&1 | grep -q '^1\.'; then
+  "$JAVAC" -source 1.3 -target 1.3 -Xlint:-options -g:none -nowarn \
+      -d build/classes @build/sources.txt
+elif [ -f "$ECJ" ]; then
+  "$JAVA" -cp "$ECJ" org.eclipse.jdt.internal.compiler.batch.Main \
+      -1.3 -nowarn -g:none -d build/classes @build/sources.txt
+else
+  echo "need a JDK 8 javac or an Eclipse batch compiler at \$ECJ" >&2
+  exit 1
+fi
 
 # Only the MIDI tracks are read at runtime.  res/ss_data.bin and the plan PNGs
 # are assetgen output used by the tools; shipping them would add ~115 kB of dead
@@ -28,7 +39,7 @@ MIDlet-Name: Silent Slop
 MIDlet-Vendor: Silent-Slop
 MIDlet-Version: 1.0.0
 MIDlet-1: Silent Slop, , ss.Midlet
-MicroEdition-Profile: MIDP-1.0
+MicroEdition-Profile: MIDP-2.0
 MicroEdition-Configuration: CLDC-1.0
 MF
 # the compile-only stubs must never ship: the phone provides these classes
@@ -39,7 +50,7 @@ MIDlet-Name: Silent Slop
 MIDlet-Vendor: Silent-Slop
 MIDlet-Version: 1.0.0
 MIDlet-1: Silent Slop, , ss.Midlet
-MicroEdition-Profile: MIDP-1.0
+MicroEdition-Profile: MIDP-2.0
 MicroEdition-Configuration: CLDC-1.0
 MF
 cat > releases/SilentSlop.jad <<'JAD'
@@ -48,7 +59,7 @@ MIDlet-Vendor: Silent-Slop
 MIDlet-Version: 1.0.0
 MIDlet-1: Silent Slop, , ss.Midlet
 MIDlet-Jar-URL: SilentSlop.jar
-MicroEdition-Profile: MIDP-1.0
+MicroEdition-Profile: MIDP-2.0
 MicroEdition-Configuration: CLDC-1.0
 JAD
 

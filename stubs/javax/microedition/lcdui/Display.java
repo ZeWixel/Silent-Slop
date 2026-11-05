@@ -1,14 +1,29 @@
 package javax.microedition.lcdui;
 
-/** Compile-time stub of MIDP 2.0 Display. */
+/**
+ * Display.
+ *
+ * Declared exactly as MIDP 2.0 declares it (this is what the device provides),
+ * but backed by a tiny desktop implementation: the desktop harnesses and the
+ * JAR verification boot the MIDlet through the real startApp() path, which needs
+ * a Display that actually holds a current Displayable.
+ */
 public class Display
 {
+    private static Display instance;
+    private Displayable current;
+
     protected Display() {}
 
-    public static Display getDisplay(javax.microedition.midlet.MIDlet m) { return null; }
-    public void setCurrent(Displayable d) {}
-    public Displayable getCurrent() { return null; }
-    public void callSerially(Runnable r) {}
+    public static Display getDisplay(javax.microedition.midlet.MIDlet m)
+    {
+        if (instance == null) instance = new Display();
+        return instance;
+    }
+
+    public void setCurrent(Displayable d) { current = d; }
+    public Displayable getCurrent() { return current; }
+    public void callSerially(Runnable r) { r.run(); }
     public boolean isColor() { return true; }
     public int numColors() { return 65536; }
     public int numAlphaLevels() { return 256; }
